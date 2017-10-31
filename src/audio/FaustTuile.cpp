@@ -16,7 +16,7 @@
 
 using namespace std;
 
-FaustTuile::FaustTuile():   AudioTuile(), 
+FaustTuile::FaustTuile():   AudioTuile(),
                             m_dsp(NULL),
                             m_processing(false),
                             m_bufferSize(4096) {
@@ -41,13 +41,14 @@ void FaustTuile::load(const std::string& fileName) {
     }
     fileStream.close();
 
-    char errorMsg[256];
-    m_dspFactory = createDSPFactory(0, NULL, "", "", m_fileName.c_str(), 
-                                        fileContent.c_str(), "", errorMsg, 3);
+    std::string errorMsg;
+    // m_dspFactory = createDSPFactory(0, NULL, "", "", m_fileName.c_str(),
+    //                                 fileContent.c_str(), "", errorMsg, 3);
+    m_dspFactory = createDSPFactoryFromString(m_fileName, fileContent, 0, 0,  "", errorMsg);
     if(!m_dspFactory) {
         throw std::logic_error("Error compiling file "+fileName+" "+errorMsg);
     }
-    m_dsp = createDSPInstance(m_dspFactory);
+    m_dsp = m_dspFactory->createDSPInstance();
     if(!m_dsp) {
         throw std::logic_error("Error compiling file "+fileName+" "+errorMsg);
     }
@@ -92,17 +93,19 @@ void FaustTuile::processBuffers(const int& nbFrames) {
         for(unsigned int c=0; c<m_internalBuffer.size(); ++c) {
             m_internalBuffer[c].assign(nbFrames, 0);
             for(int f=0; f<nbFrames && f<m_bufferSize; ++f) {
-                m_dspInputBuffer[c][f]=0;
+               m_dspInputBuffer[c][f]=0;
             }
         }
         //set computed before to avoid infinite recursions
         m_computed=true;
-        if(m_procActive && m_inputTuiles.size()>0) {
+        if(m_procActive // && m_inputTuiles.size()>0
+           ) {
+          std::cout << "handed control" << std::endl;
             //accumulate the buffers of all inputs
-            vector<AudioTuile*>::iterator itInp=m_inputTuiles.begin();
-            for(; itInp!=m_inputTuiles.end(); ++itInp) {
+          vector<AudioTuile*>::iterator itInp=m_inputTuiles.begin();
+          for(; itInp!=m_inputTuiles.end(); ++itInp) {
                 (*itInp)->processBuffers(nbFrames);
-                const vector<vector<float> >& inpBuf = (*itInp)->getBuffer(); 
+                const vector<vector<float> >& inpBuf = (*itInp)->getBuffer();
                 for(int c=0; c<m_inputChannels && c<(int)inpBuf.size(); ++c) {
                     for(int f=0;f<m_bufferSize && f<(int)inpBuf[c].size(); ++f){
                         m_dspInputBuffer[c][f]+=inpBuf[c][f];
@@ -133,4 +136,3 @@ void FaustTuile::load(xmlNodePtr node) {
         load(std::string(value));
     }
 }
-

@@ -8,7 +8,7 @@
 #ifndef FaustTuile_h
 #define FaustTuile_h
 
-#include <faust/llvm-dsp.h>
+#include <faust/dsp/llvm-dsp.h>
 #include <faust/gui/UI.h>
 
 #include "AudioTuile.hpp"
@@ -22,7 +22,7 @@ class FaustTuile : public AudioTuile {
 		virtual void load(const std::string&);
 		void unload();
         virtual void load(xmlNodePtr node);
-	
+
 		void activate();
 		void deactivate();
 
@@ -43,4 +43,3 @@ class FaustTuile : public AudioTuile {
 };
 
 #endif
-
